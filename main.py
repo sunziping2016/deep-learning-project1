@@ -15,6 +15,7 @@ from tqdm import tqdm
 
 from dataset.imagenet import ImageNetDataset
 from model.data_parallel import get_data_parallel
+from model.deeper_cnn import ImageNetDeeperCNN
 from model.imagenet_cnn import ImageNetCNN
 from running_log import RunningLog
 
@@ -39,8 +40,8 @@ def eval_model(model: nn.Module, data_loader: DataLoader,
 def main():
     parser = argparse.ArgumentParser()
     # Common Options
-    parser.add_argument('--model', choices=['CNN'], default='CNN',
-                        help='model to run')
+    parser.add_argument('--model', choices=['CNN', 'DeeperCNN'],
+                        default='CNN', help='model to run')
     parser.add_argument('--task', choices=['train', 'valid', 'test'],
                         default='train', help='task to run')
     parser.add_argument('--dataset_path', help='path to the dataset folder',
@@ -71,6 +72,8 @@ def main():
     os.makedirs(args.save_path, exist_ok=True)
     if args.model == 'CNN':
         model = ImageNetCNN()
+    elif args.model == 'DeeperCNN':
+        model = ImageNetDeeperCNN()
     else:
         raise RuntimeError('Unknown model')
     model: nn.Module = get_data_parallel(model, args.gpu)
