@@ -6,7 +6,7 @@
 pip install -r requirements.txt
 ```
 
-以下命令训练。其中`<gpu_ids>`是逗号分隔的GPU id列表，如`0,2,3`，如果不指定会在CPU上运行。`<name>`是这次训练的模型的名字，强烈建议指定，默认叫`test`。
+以下命令训练。其中`<gpu_ids>`是逗号分隔的GPU id列表，如`0,2,3`，如果不指定会在CPU上运行。`<name>`是这次训练的模型的名字，强烈建议指定，默认叫`test`。在下面的命令中加入`--load <epoch_id>`可以从断点开始训练。
 
 
 ```shell script
