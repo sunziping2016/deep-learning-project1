@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
+from torchvision.transforms import ToTensor
 
 
 class ImageNetDeeperCNN(nn.Module):
@@ -37,3 +38,7 @@ class ImageNetDeeperCNN(nn.Module):
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
+
+    @staticmethod
+    def get_transform():
+        return ToTensor()

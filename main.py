@@ -10,13 +10,13 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
 from dataset.imagenet import ImageNetDataset
 from model.data_parallel import get_data_parallel
 from model.deeper_cnn import ImageNetDeeperCNN
 from model.imagenet_cnn import ImageNetCNN
+from model.pretrained_model import PretrainedModel
 from running_log import RunningLog
 
 
@@ -40,7 +40,7 @@ def eval_model(model: nn.Module, data_loader: DataLoader,
 def main():
     parser = argparse.ArgumentParser()
     # Common Options
-    parser.add_argument('--model', choices=['CNN', 'DeeperCNN'],
+    parser.add_argument('--model', choices=['CNN', 'DeeperCNN', 'Pretrained'],
                         default='CNN', help='model to run')
     parser.add_argument('--task', choices=['train', 'valid', 'test'],
                         default='train', help='task to run')
@@ -65,6 +65,17 @@ def main():
                         help='save model every numbers of epoch; '
                              '0 for disabling')
     parser.add_argument('--comment', default='', help='comment for tensorboard')
+    # Pretrained Model Options
+    parser.add_argument('--pretrained_model', choices=[
+        'alexnet', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16',
+        'vgg16_bn', 'vgg19', 'vgg19_bn', 'resnet18', 'resnet34', 'resnet50',
+        'resnet101', 'resnet152', 'squeezenet1_0', 'squeezenet1_1',
+        'densenet121', 'densenet169', 'densenet161', 'densenet201',
+        'inception_v3', 'googlenet', 'shufflenet_v2_x0_5', 'shufflenet_v2_x1_0',
+        'shufflenet_v2_x1_5', 'shufflenet_v2_x2_0', 'mobilenet_v2',
+        'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2',
+        'wide_resnet101_2', 'mnasnet0_5', 'mnasnet0_75', 'mnasnet1_0',
+        'mnasnet1_3'], default='resnet18', help='pretrained model to use')
     # Build model
     args = parser.parse_args()
     running_log = RunningLog(args.save_path)
@@ -72,8 +83,16 @@ def main():
     os.makedirs(args.save_path, exist_ok=True)
     if args.model == 'CNN':
         model = ImageNetCNN()
+        train_transform = ImageNetCNN.get_transform()
+        valid_transform = ImageNetCNN.get_transform()
     elif args.model == 'DeeperCNN':
         model = ImageNetDeeperCNN()
+        train_transform = ImageNetDeeperCNN.get_transform()
+        valid_transform = ImageNetDeeperCNN.get_transform()
+    elif args.model == 'Pretrained':
+        model = PretrainedModel(args.pretrained_model)
+        train_transform = PretrainedModel.get_train_transform()
+        valid_transform = PretrainedModel.get_valid_transform()
     else:
         raise RuntimeError('Unknown model')
     model: nn.Module = get_data_parallel(model, args.gpu)
@@ -89,7 +108,7 @@ def main():
     if args.task == 'train':
         model.train()
         train_dataset = ImageNetDataset(os.path.join(
-            args.dataset_path, 'train.txt'), transform=ToTensor())
+            args.dataset_path, 'train.txt'), transform=train_transform)
         train_data_loader = DataLoader(train_dataset,
                                        batch_size=args.batch_size,
                                        shuffle=True)
@@ -122,8 +141,9 @@ def main():
                 step += 1
             if args.valid_every_epoch and epoch % args.valid_every_epoch == 0:
                 if valid_data_loader is None:
-                    valid_dataset = ImageNetDataset(os.path.join(
-                        args.dataset_path, 'val.txt'), transform=ToTensor())
+                    valid_dataset = ImageNetDataset(
+                        os.path.join(args.dataset_path, 'val.txt'),
+                        transform=valid_transform)
                     valid_data_loader = DataLoader(valid_dataset,
                                                    batch_size=args.batch_size,
                                                    shuffle=False)
@@ -140,7 +160,7 @@ def main():
     elif args.task == 'valid':
         model.eval()
         valid_dataset = ImageNetDataset(os.path.join(
-            args.dataset_path, 'val.txt'), transform=ToTensor())
+            args.dataset_path, 'val.txt'), transform=valid_transform)
         valid_data_loader = DataLoader(valid_dataset,
                                        batch_size=args.batch_size,
                                        shuffle=False)
@@ -148,8 +168,9 @@ def main():
         print('Accuracy=%f' % acc)
     elif args.task == 'test':
         model.eval()
-        test_dataset = ImageNetDataset(os.path.join(
-            args.dataset_path, 'test.txt'), is_test=True, transform=ToTensor())
+        test_dataset = ImageNetDataset(
+            os.path.join(args.dataset_path, 'test.txt'),
+            is_test=True, transform=valid_transform)
         test_data_loader = DataLoader(test_dataset,
                                       batch_size=args.batch_size,
                                       shuffle=False)
