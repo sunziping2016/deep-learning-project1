@@ -2,6 +2,7 @@ absl-py==0.8.1
 cachetools==3.1.1
 certifi==2019.9.11
 chardet==3.0.4
+efficientnet-pytorch==0.5.1
 google-auth==1.7.1
 google-auth-oauthlib==0.4.1
 grpcio==1.25.0

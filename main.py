@@ -41,7 +41,7 @@ def main():
     parser = argparse.ArgumentParser()
     # Common Options
     parser.add_argument('--model', choices=['CNN', 'DeeperCNN', 'Pretrained'],
-                        default='CNN', help='model to run')
+                        default='Pretrained', help='model to run')
     parser.add_argument('--task', choices=['train', 'valid', 'test'],
                         default='train', help='task to run')
     parser.add_argument('--dataset_path', help='path to the dataset folder',
@@ -54,7 +54,7 @@ def main():
                         help='load module training at give epoch')
     parser.add_argument('--epoch', type=int, default=200, help='epoch to train')
     parser.add_argument('--batch_size', type=int, default=64, help='batch size')
-    parser.add_argument('--learning_rate', type=float, default=0.0003,
+    parser.add_argument('--learning_rate', type=float, default=0.001,
                         help='learning rate')
     parser.add_argument('--log_every_iter', type=int, default=100,
                         help='log loss every numbers of iteration')
@@ -75,7 +75,9 @@ def main():
         'shufflenet_v2_x1_5', 'shufflenet_v2_x2_0', 'mobilenet_v2',
         'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2',
         'wide_resnet101_2', 'mnasnet0_5', 'mnasnet0_75', 'mnasnet1_0',
-        'mnasnet1_3'], default='resnet18', help='pretrained model to use')
+        'mnasnet1_3', 'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2',
+        'efficientnet-b3'], default='efficientnet-b3',
+         help='pretrained model to use')
     # Build model
     args = parser.parse_args()
     running_log = RunningLog(args.save_path)
@@ -91,8 +93,10 @@ def main():
         valid_transform = ImageNetDeeperCNN.get_transform()
     elif args.model == 'Pretrained':
         model = PretrainedModel(args.pretrained_model)
-        train_transform = PretrainedModel.get_train_transform()
-        valid_transform = PretrainedModel.get_valid_transform()
+        train_transform = PretrainedModel.get_train_transform(
+            args.pretrained_model)
+        valid_transform = PretrainedModel.get_valid_transform(
+            args.pretrained_model)
     else:
         raise RuntimeError('Unknown model')
     model: nn.Module = get_data_parallel(model, args.gpu)

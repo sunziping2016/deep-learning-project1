@@ -1,5 +1,6 @@
 import torch
 import torchvision
+from efficientnet_pytorch import EfficientNet
 from torch import nn
 from torchvision import transforms
 
@@ -41,12 +42,23 @@ models = {
     'mnasnet1_3': torchvision.models.mnasnet1_3,
 }
 
+efficientnet_models = [
+    'efficientnet-b0',
+    'efficientnet-b1',
+    'efficientnet-b2',
+    'efficientnet-b3',
+]
+
 
 class PretrainedModel(nn.Module):
     def __init__(self, model: str = 'resnet18'):
         super(PretrainedModel, self).__init__()
+        if model in efficientnet_models:
+            pretrained = EfficientNet.from_pretrained(model)
+        else:
+            pretrained = models[model](pretrained=True)
         self.model = nn.Sequential(
-            models[model](pretrained=True),
+            pretrained,
             nn.ReLU(inplace=True),
             nn.Linear(1000, 100)
         )
@@ -56,10 +68,12 @@ class PretrainedModel(nn.Module):
 
     # noinspection PyUnresolvedReferences
     @staticmethod
-    def get_train_transform():
+    def get_train_transform(model: str):
         return transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(
+                brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -67,7 +81,7 @@ class PretrainedModel(nn.Module):
 
     # noinspection PyUnresolvedReferences
     @staticmethod
-    def get_valid_transform():
+    def get_valid_transform(model: str):
         return transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
