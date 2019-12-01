@@ -1,6 +1,7 @@
 import torch
 import torchvision
 from efficientnet_pytorch import EfficientNet
+import pretrainedmodels
 from torch import nn
 from torchvision import transforms
 
@@ -49,12 +50,24 @@ efficientnet_models = [
     'efficientnet-b3',
 ]
 
+senet_models=[
+    'SENet',
+    'senet154',
+    'se_resnet50',
+    'se_resnet101',
+    'se_resnet152',
+    'se_resnext50_32x4d', 
+    'se_resnext101_32x4d',
+]
+
 
 class PretrainedModel(nn.Module):
     def __init__(self, model: str = 'resnet18'):
         super(PretrainedModel, self).__init__()
         if model in efficientnet_models:
             pretrained = EfficientNet.from_pretrained(model)
+        elif model in senet_models:
+            pretrained=pretrainedmodels.__dict__[model](num_classes=1000, pretrained='imagenet'),
         else:
             pretrained = models[model](pretrained=True)
         self.model = nn.Sequential(
