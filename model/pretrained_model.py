@@ -67,7 +67,8 @@ class PretrainedModel(nn.Module):
         if model in efficientnet_models:
             pretrained = EfficientNet.from_pretrained(model)
         elif model in senet_models:
-            pretrained=pretrainedmodels.__dict__[model](num_classes=1000, pretrained='imagenet'),
+            pretrained=pretrainedmodels.__dict__[model](num_classes=1000,
+                                                        pretrained='imagenet'),
         else:
             pretrained = models[model](pretrained=True)
         self.model = nn.Sequential(
