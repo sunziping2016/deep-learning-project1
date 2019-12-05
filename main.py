@@ -76,8 +76,9 @@ def main():
         'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2',
         'wide_resnet101_2', 'mnasnet0_5', 'mnasnet0_75', 'mnasnet1_0',
         'mnasnet1_3', 'efficientnet-b0', 'efficientnet-b1', 'efficientnet-b2',
-        'efficientnet-b3'], default='efficientnet-b3',
-         help='pretrained model to use')
+        'efficientnet-b3', 'SENet', 'senet154', 'se_resnet50', 'se_resnet101',
+        'se_resnet152', 'se_resnext50_32x4d', 'se_resnext101_32x4d'],
+        default='efficientnet-b3', help='pretrained model to use')
     # Build model
     args = parser.parse_args()
     running_log = RunningLog(args.save_path)
